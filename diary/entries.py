@@ -6,7 +6,7 @@ import click
 
 from diary.config import (
     DATA_SUBDIR, ENTRY_FILE_NAME, METADATA_FILE_NAME,
-    METADATA_TITLE_KEY, METADATA_TAGS_KEY
+    METADATA_TITLE_KEY, METADATA_TAGS_KEY, NON_PAGED_ENTRY_COUNT
 )
 
 USER_HOME = Path.home()
@@ -60,15 +60,13 @@ def get_metadata(entry_name) -> dict:
     return json.loads(content) if content else {}
 
 
-def list_entries(tags: tuple[str]):
-    if not os.path.exists(DATA_DIR):
-        click.echo('no entries exist')
-        return
+def _iterate_over_entries(
+        entries: list[str],
+        result_map: dict[int, str],
+        tags: set[str] = None,
+        no_tip: bool = False
+):
 
-    entries = os.listdir(DATA_DIR)
-    entries.sort(reverse=True)
-
-    tags = set(tags)
     index = 1
     for entry in entries:
         entry_metadata = get_metadata(entry_name=entry)
@@ -81,8 +79,36 @@ def list_entries(tags: tuple[str]):
         displayed_entry = f'{click.style(str(index) + ".", fg="green")} {entry}'
         if title := entry_metadata.get(METADATA_TITLE_KEY):
             displayed_entry += f' - {title}'
-        click.echo(displayed_entry)
+        displayed_entry += '\n'
+
+        result_map[index] = entry
+        if index == 1 and not no_tip:
+            yield 'Choose entry number:\n'
+        yield displayed_entry
+
         index += 1
+
+
+def list_entries(tags: tuple[str], pages: bool, no_return: bool) -> dict[int, str] | None:
+    if not os.path.exists(DATA_DIR):
+        click.echo('no entries exist')
+        return
+
+    entries = os.listdir(DATA_DIR)
+    entries.sort(reverse=True)
+    entry_count = len(entries)
+
+    tags = set(tags)
+    result_map = {}
+
+    entries = _iterate_over_entries(entries=entries, result_map=result_map, tags=tags, no_tip=no_return)
+    if pages or entry_count > NON_PAGED_ENTRY_COUNT:
+        click.echo_via_pager(entries)
+    else:
+        for entry in entries:
+            click.echo(entry, nl=False)
+
+    return result_map if not no_return else None
 
 
 def add_metadata(entry_name: str, title: str = None, tags: tuple[str] = None):

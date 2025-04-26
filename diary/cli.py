@@ -52,9 +52,24 @@ def write(date: datetime, name: str, tags: tuple[str]):
     multiple=True,
     help='List entries with any of these tags (accepting one or more)',
 )
-def list_(tags: tuple[str]):
+@click.option(
+    '-p', '--pages',
+    is_flag=True,
+    help='Paginate entries',
+)
+@click.option(
+    '-n', '--noedit',
+    is_flag=True,
+    help='Do not prompt for entry to edit',
+)
+def list_(tags: tuple[str], pages: bool, noedit: bool):
     """List existing entries"""
-    list_entries(tags)
+
+    entries_map = list_entries(tags=tags, pages=pages, no_return=noedit)
+    if entries_map:
+        entry_num = click.prompt('Entry # to edit', default=0)
+        if entry_num and (entry_name := entries_map.get(entry_num)):
+            edit_entry(entry_name=entry_name)
 
 
 @click.group()
