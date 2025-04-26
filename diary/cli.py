@@ -29,7 +29,7 @@ def get_name(stamp: datetime) -> str:
     '-t', '--tags',
     type=click.STRING,
     multiple=True,
-    help='Add tags to the entry - several can be provided',
+    help='Add tags to the entry (accepting one or more)',
 )
 def write(date: datetime, name: str, tags: tuple[str]):
     """
@@ -46,9 +46,15 @@ def write(date: datetime, name: str, tags: tuple[str]):
 
 
 @click.command(name='list')
-def list_():
+@click.option(
+    '-t', '--tags',
+    type=click.STRING,
+    multiple=True,
+    help='List entries with any of these tags (accepting one or more)',
+)
+def list_(tags: tuple[str]):
     """List existing entries"""
-    list_entries()
+    list_entries(tags)
 
 
 @click.group()

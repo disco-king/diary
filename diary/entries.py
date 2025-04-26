@@ -4,17 +4,20 @@ import json
 
 import click
 
-from diary.config import DATA_SUBDIR, ENTRY_FILE_NAME, METADATA_FILE_NAME
-
+from diary.config import (
+    DATA_SUBDIR, ENTRY_FILE_NAME, METADATA_FILE_NAME,
+    METADATA_TITLE_KEY, METADATA_TAGS_KEY
+)
 
 USER_HOME = Path.home()
 DATA_DIR = USER_HOME / Path(DATA_SUBDIR)
 
 
-def check_file_ok(directory: Path, file: Path) -> bool:
+def check_file_ok(directory: Path, file: Path = None) -> bool:
     try:
         directory.mkdir(parents=True, exist_ok=True)
-        file.touch(exist_ok=True)
+        if file is not None:
+            file.touch(exist_ok=True)
     except PermissionError:
         return False
     return True
@@ -57,19 +60,29 @@ def get_metadata(entry_name) -> dict:
     return json.loads(content) if content else {}
 
 
-def list_entries():
+def list_entries(tags: tuple[str]):
     if not os.path.exists(DATA_DIR):
-        click.echo('no entries found')
+        click.echo('no entries exist')
         return
 
     entries = os.listdir(DATA_DIR)
     entries.sort(reverse=True)
-    for index, entry in enumerate(entries):
-        displayed_entry = f'{click.style(str(index) + ".", fg="green")} {entry}'
+
+    tags = set(tags)
+    index = 1
+    for entry in entries:
         entry_metadata = get_metadata(entry_name=entry)
-        if title := entry_metadata.get('title'):
+
+        if tags:
+            entry_tags = set(entry_metadata.get(METADATA_TAGS_KEY, []))
+            if not entry_tags.intersection(tags):
+                continue
+
+        displayed_entry = f'{click.style(str(index) + ".", fg="green")} {entry}'
+        if title := entry_metadata.get(METADATA_TITLE_KEY):
             displayed_entry += f' - {title}'
         click.echo(displayed_entry)
+        index += 1
 
 
 def add_metadata(entry_name: str, title: str = None, tags: tuple[str] = None):
@@ -84,20 +97,20 @@ def add_metadata(entry_name: str, title: str = None, tags: tuple[str] = None):
 
     data_upd = {}
     if title:
-        data_upd['title'] = title
+        data_upd[METADATA_TITLE_KEY] = title
     if tags:
-        data_upd['tags'] = tags
+        data_upd[METADATA_TAGS_KEY] = tags
 
     with open(metadata_path, 'r') as f:
         content = f.read()
 
     metadata = json.loads(content) if content else {}
     if title:
-        metadata['title'] = title
+        metadata[METADATA_TITLE_KEY] = title
     if tags:
-        existing_tags: list = metadata.get('tags', [])
+        existing_tags: list = metadata.get(METADATA_TAGS_KEY, [])
         existing_tags.extend(tags)
-        metadata['tags'] = list(set(existing_tags))
+        metadata[METADATA_TAGS_KEY] = list(set(existing_tags))
 
     with open(metadata_path, 'w') as f:
         f.write(json.dumps(metadata))
