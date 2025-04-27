@@ -2,6 +2,7 @@ from datetime import datetime
 
 import click
 
+from diary import config
 from diary.entries import (
     edit_entry, list_entries, add_metadata, list_entry_tags, view_entry
 )
@@ -15,6 +16,7 @@ from diary.utils.cli import today, get_name
     type=click.DateTime(formats=['%Y-%m-%d', '%d-%m-%Y']),
     default=today,
     metavar='DATE',
+    envvar=config.DATE_ENV_VAR,
 )
 @click.option(
     '-n', '--name',
@@ -47,6 +49,7 @@ def write(date: datetime, name: str, tags: tuple[str]):
     type=click.DateTime(formats=['%Y-%m-%d', '%d-%m-%Y']),
     default=today,
     metavar='DATE',
+    envvar=config.DATE_ENV_VAR,
 )
 @click.option(
     '-s', '--short',
