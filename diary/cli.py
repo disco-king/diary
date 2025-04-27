@@ -2,7 +2,9 @@ from datetime import datetime
 
 import click
 
-from diary.entries import edit_entry, list_entries, add_metadata, list_entry_tags
+from diary.entries import (
+    edit_entry, list_entries, add_metadata, list_entry_tags, view_entry
+)
 from diary.media.cli import media
 from diary.utils.cli import today, get_name
 
@@ -37,6 +39,30 @@ def write(date: datetime, name: str, tags: tuple[str]):
     edit_entry(entry_name)
     if name or tags:
         add_metadata(entry_name=entry_name, title=name, tags=tags)
+
+
+@click.command(name='view')
+@click.argument(
+    'date',
+    type=click.DateTime(formats=['%Y-%m-%d', '%d-%m-%Y']),
+    default=today,
+    metavar='DATE',
+)
+@click.option(
+    '-s', '--short',
+    is_flag=True,
+    help='Truncate entry for brevity.',
+)
+def view(date: datetime, short: bool):
+    """
+    View entry.
+
+    Provide standart format date in DATE to view entry for a specific day.
+    Views today's entry by default.
+    """
+
+    entry_name = get_name(date)
+    view_entry(entry_name=entry_name, short=short)
 
 
 @click.command(name='list')
@@ -82,4 +108,5 @@ def cli():
 cli.add_command(write)
 cli.add_command(list_)
 cli.add_command(list_tags)
+cli.add_command(view)
 cli.add_command(media)
