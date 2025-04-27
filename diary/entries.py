@@ -1,71 +1,28 @@
 import os
-from pathlib import Path
 import json
 
 import click
 
-from diary.config import (
-    DATA_SUBDIR, ENTRY_FILE_NAME, METADATA_FILE_NAME,
-    METADATA_TITLE_KEY, METADATA_TAGS_KEY, NON_PAGED_ENTRY_COUNT
+from diary import config
+from diary.utils.entries import (
+    get_entry_path, get_metadata_path, get_metadata, upsert_metadata
 )
-
-USER_HOME = Path.home()
-DATA_DIR = USER_HOME / Path(DATA_SUBDIR)
-
-
-def check_file_ok(directory: Path, file: Path = None) -> bool:
-    try:
-        directory.mkdir(parents=True, exist_ok=True)
-        if file is not None:
-            file.touch(exist_ok=True)
-    except PermissionError:
-        return False
-    return True
-
-
-def get_entry_path(entry_name: str) -> str | None:
-    subdirectory = DATA_DIR / entry_name
-    filename = subdirectory / ENTRY_FILE_NAME
-
-    if not check_file_ok(directory=subdirectory, file=filename):
-        return None
-    return str(filename)
 
 
 def get_entry_names() -> list[str] | None:
-    if not os.path.exists(DATA_DIR):
+    if not os.path.exists(config.DATA_DIR):
         click.echo('no entries exist')
         return
 
-    return os.listdir(DATA_DIR)
-
-
-def get_metadata_path(entry_name: str) -> str | None:
-    subdirectory = DATA_DIR / entry_name
-    filename = subdirectory / METADATA_FILE_NAME
-
-    if not check_file_ok(directory=subdirectory, file=filename):
-        return None
-    return str(filename)
+    return os.listdir(config.DATA_DIR)
 
 
 def edit_entry(entry_name: str):
     entry_path = get_entry_path(entry_name)
     if entry_path is None:
-        click.echo(f'could not create entry in {DATA_DIR}, check access')
+        click.echo(f'could not create entry in {config.DATA_DIR}, check access')
     else:
         click.edit(filename=entry_path)
-
-
-def get_metadata(entry_name) -> dict:
-    metadata_path = get_metadata_path(entry_name)
-
-    if metadata_path is None:
-        return {}
-
-    with open(metadata_path, 'r') as f:
-        content = f.read()
-    return json.loads(content) if content else {}
 
 
 def _iterate_over_entries(
@@ -80,12 +37,12 @@ def _iterate_over_entries(
         entry_metadata = get_metadata(entry_name=entry)
 
         if tags:
-            entry_tags = set(entry_metadata.get(METADATA_TAGS_KEY, []))
+            entry_tags = set(entry_metadata.get(config.METADATA_TAGS_KEY, []))
             if not entry_tags.intersection(tags):
                 continue
 
         displayed_entry = f'{click.style(str(index) + ".", fg="green")} {entry}'
-        if title := entry_metadata.get(METADATA_TITLE_KEY):
+        if title := entry_metadata.get(config.METADATA_TITLE_KEY):
             displayed_entry += f' - {title}'
         displayed_entry += '\n'
 
@@ -110,7 +67,7 @@ def list_entries(tags: tuple[str], pages: bool, no_return: bool) -> dict[int, st
     result_map = {}
 
     entries = _iterate_over_entries(entries=entries, result_map=result_map, tags=tags, no_tip=no_return)
-    if pages or entry_count > NON_PAGED_ENTRY_COUNT:
+    if pages or entry_count > config.NON_PAGED_ENTRY_COUNT:
         click.echo_via_pager(entries)
     else:
         for entry in entries:
@@ -126,28 +83,10 @@ def add_metadata(entry_name: str, title: str = None, tags: tuple[str] = None):
     metadata_path = get_metadata_path(entry_name)
 
     if metadata_path is None:
-        click.echo(f'could not edit metadata in {DATA_DIR}, check access')
+        click.echo(f'could not edit metadata in {config.DATA_DIR}, check access')
         return
 
-    data_upd = {}
-    if title:
-        data_upd[METADATA_TITLE_KEY] = title
-    if tags:
-        data_upd[METADATA_TAGS_KEY] = tags
-
-    with open(metadata_path, 'r') as f:
-        content = f.read()
-
-    metadata = json.loads(content) if content else {}
-    if title:
-        metadata[METADATA_TITLE_KEY] = title
-    if tags:
-        existing_tags: list = metadata.get(METADATA_TAGS_KEY, [])
-        existing_tags.extend(tags)
-        metadata[METADATA_TAGS_KEY] = list(set(existing_tags))
-
-    with open(metadata_path, 'w') as f:
-        f.write(json.dumps(metadata))
+    upsert_metadata(metadata_path, title=title, tags=tags)
 
 
 def list_entry_tags():
@@ -156,7 +95,7 @@ def list_entry_tags():
 
     tags = set()
     for entry in entries:
-        entry_tags = set(get_metadata(entry_name=entry).get(METADATA_TAGS_KEY, []))
+        entry_tags = set(get_metadata(entry_name=entry).get(config.METADATA_TAGS_KEY, []))
         tags.update(entry_tags)
 
     if tags:

@@ -3,14 +3,8 @@ from datetime import datetime
 import click
 
 from diary.entries import edit_entry, list_entries, add_metadata, list_entry_tags
-
-
-def today() -> datetime:
-    return datetime.now()
-
-
-def get_name(stamp: datetime) -> str:
-    return str(stamp.date())
+from diary.media.cli import media
+from diary.utils.cli import today, get_name
 
 
 @click.command(name='write')
@@ -88,3 +82,4 @@ def cli():
 cli.add_command(write)
 cli.add_command(list_)
 cli.add_command(list_tags)
+cli.add_command(media)
