@@ -116,13 +116,14 @@ def view_entry(entry_name: str, short: bool):
         click.echo(nl=add_spacing)
         click.echo(click.style("Media:", fg="green"))
         for media_file in entry_media:
+            fname = media_file.get(config.MEDIA_META_NAME_KEY, '')
             click.echo(
-                f'{click.style("Name:", fg="green")} {media_file.get(config.MEDIA_META_NAME_KEY)}',
+                f'{click.style("Name:", fg="green")} {fname}'.ljust(config.META_ATTR_WIDTH),
                 nl=False
             )
             if file_description := media_file.get(config.MEDIA_META_DESCRIPTION_KEY):
                 click.echo(
-                    f' {click.style("Description:", fg="green")} {file_description}',
+                    f' {click.style("Description:", fg="green")} {file_description}'.ljust(config.META_ATTR_WIDTH),
                     nl=False
                 )
             click.echo()
