@@ -14,41 +14,44 @@ def check_file_ok(directory: Path, file: Path = None) -> bool:
     return True
 
 
-def get_entry_path(entry_name: str) -> str | None:
+def get_entry_path(entry_name: str) -> Path | None:
     subdirectory = config.DATA_DIR / entry_name
     filename = subdirectory / config.ENTRY_FILE_NAME
 
     if not check_file_ok(directory=subdirectory, file=filename):
         return None
-    return str(filename)
+    return filename
 
 
-def get_entry_media_path(entry_name: str) -> str | None:
+def get_entry_media_path(entry_name: str) -> Path | None:
     subdirectory = config.DATA_DIR / entry_name / config.MEDIA_SUBDIR_NAME
 
     if not check_file_ok(directory=subdirectory):
         return None
-    return str(subdirectory)
+    return subdirectory
 
 
-def get_metadata_path(entry_name: str) -> str | None:
+def get_metadata_path(entry_name: str) -> Path | None:
     subdirectory = config.DATA_DIR / entry_name
     filename = subdirectory / config.METADATA_FILE_NAME
 
     if not check_file_ok(directory=subdirectory, file=filename):
         return None
-    return str(filename)
+    return filename
 
 
-def get_metadata(entry_name) -> dict:
+def get_metadata(entry_name: str, metadata_field: str = None) -> dict:
     metadata_path = get_metadata_path(entry_name)
 
     if metadata_path is None:
         return {}
 
-    with open(metadata_path, 'r') as f:
+    with open(str(metadata_path), 'r') as f:
         content = f.read()
-    return json.loads(content) if content else {}
+
+    metadata = json.loads(content) if content else {}
+
+    return metadata.get(metadata_field, None) if metadata_field else metadata
 
 
 def update_media_metadata(

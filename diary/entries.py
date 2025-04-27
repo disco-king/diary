@@ -22,7 +22,7 @@ def edit_entry(entry_name: str):
     if entry_path is None:
         click.echo(f'could not create entry in {config.DATA_DIR}, check access')
     else:
-        click.edit(filename=entry_path)
+        click.edit(filename=str(entry_path))
 
 
 def _iterate_over_entries(
@@ -86,7 +86,7 @@ def add_metadata(entry_name: str, title: str = None, tags: tuple[str] = None):
         click.echo(f'could not edit metadata in {config.DATA_DIR}, check access')
         return
 
-    upsert_metadata(metadata_path, title=title, tags=tags)
+    upsert_metadata(str(metadata_path), title=title, tags=tags)
 
 
 def list_entry_tags():

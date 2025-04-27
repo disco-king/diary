@@ -3,7 +3,7 @@ from datetime import datetime
 import click
 
 from diary.utils.cli import today, get_name
-from diary.media.entries import add_entry_media
+from diary.media.entries import add_entry_media, view_entry_media
 
 
 @click.command(name='add')
@@ -45,6 +45,30 @@ def add_media(date: datetime, name: str, description: str, file: str):
     add_entry_media(entry_name=entry_name, file_path=file, file_name=name, description=description)
 
 
+@click.command(name='view')
+@click.option(
+    '-d', '--date',
+    type=click.DateTime(formats=['%Y-%m-%d', '%d-%m-%Y']),
+    default=today,
+    metavar='DATE',
+    help='Entry date to add media to. Defaults to today.',
+)
+@click.argument(
+    'file',
+    type=click.STRING,
+    metavar='FILE',
+)
+def view_media(date: datetime, file: str):
+    """
+    View entry media file.
+
+    Provide a file name present in entry and an entry date if needed.
+    """
+
+    entry_name = get_name(date)
+    view_entry_media(entry_name=entry_name, file=file)
+
+
 @click.group()
 def media():
     """Manage entry media."""
@@ -52,3 +76,4 @@ def media():
 
 
 media.add_command(add_media)
+media.add_command(view_media)
