@@ -32,6 +32,14 @@ def get_entry_path(entry_name: str) -> str | None:
     return str(filename)
 
 
+def get_entry_names() -> list[str] | None:
+    if not os.path.exists(DATA_DIR):
+        click.echo('no entries exist')
+        return
+
+    return os.listdir(DATA_DIR)
+
+
 def get_metadata_path(entry_name: str) -> str | None:
     subdirectory = DATA_DIR / entry_name
     filename = subdirectory / METADATA_FILE_NAME
@@ -90,11 +98,11 @@ def _iterate_over_entries(
 
 
 def list_entries(tags: tuple[str], pages: bool, no_return: bool) -> dict[int, str] | None:
-    if not os.path.exists(DATA_DIR):
-        click.echo('no entries exist')
-        return
 
-    entries = os.listdir(DATA_DIR)
+    entries = get_entry_names()
+    if not entries:
+        return None
+
     entries.sort(reverse=True)
     entry_count = len(entries)
 
@@ -140,3 +148,21 @@ def add_metadata(entry_name: str, title: str = None, tags: tuple[str] = None):
 
     with open(metadata_path, 'w') as f:
         f.write(json.dumps(metadata))
+
+
+def list_entry_tags():
+
+    entries = get_entry_names()
+
+    tags = set()
+    for entry in entries:
+        entry_tags = set(get_metadata(entry_name=entry).get(METADATA_TAGS_KEY, []))
+        tags.update(entry_tags)
+
+    if tags:
+        tags = list(tags)
+        tags.sort()
+        for tag in tags:
+            click.echo(tag)
+    else:
+        click.echo('no tags found')

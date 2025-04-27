@@ -2,7 +2,7 @@ from datetime import datetime
 
 import click
 
-from diary.entries import edit_entry, list_entries, add_metadata
+from diary.entries import edit_entry, list_entries, add_metadata, list_entry_tags
 
 
 def today() -> datetime:
@@ -23,17 +23,17 @@ def get_name(stamp: datetime) -> str:
 @click.option(
     '-n', '--name',
     type=click.STRING,
-    help='Add name to the entry',
+    help='Add name to the entry.',
 )
 @click.option(
     '-t', '--tags',
     type=click.STRING,
     multiple=True,
-    help='Add tags to the entry (accepting one or more)',
+    help='Add tags to the entry (accepting one or more).',
 )
 def write(date: datetime, name: str, tags: tuple[str]):
     """
-    Write an entry
+    Write an entry.
 
     Provide standart format date in DATE to write entry for a specific day.
     Edits today's entry by default.
@@ -50,20 +50,20 @@ def write(date: datetime, name: str, tags: tuple[str]):
     '-t', '--tags',
     type=click.STRING,
     multiple=True,
-    help='List entries with any of these tags (accepting one or more)',
+    help='List entries with any of these tags (accepting one or more).',
 )
 @click.option(
     '-p', '--pages',
     is_flag=True,
-    help='Paginate entries',
+    help='Paginate entries.',
 )
 @click.option(
     '-n', '--noedit',
     is_flag=True,
-    help='Do not prompt for entry to edit',
+    help='Do not prompt for entry to edit.',
 )
 def list_(tags: tuple[str], pages: bool, noedit: bool):
-    """List existing entries"""
+    """List existing entries."""
 
     entries_map = list_entries(tags=tags, pages=pages, no_return=noedit)
     if entries_map:
@@ -72,11 +72,19 @@ def list_(tags: tuple[str], pages: bool, noedit: bool):
             edit_entry(entry_name=entry_name)
 
 
+@click.command(name='tags')
+def list_tags():
+    """List existing tags."""
+
+    list_entry_tags()
+
+
 @click.group()
 def cli():
-    """A CLI tool for documenting your life"""
+    """A CLI tool for documenting your life."""
     pass
 
 
 cli.add_command(write)
 cli.add_command(list_)
+cli.add_command(list_tags)
