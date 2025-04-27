@@ -9,14 +9,6 @@ from diary.media.entries import add_entry_media, view_entry_media
 
 @click.command(name='add')
 @click.option(
-    '-d', '--date',
-    type=click.DateTime(formats=['%Y-%m-%d', '%d-%m-%Y']),
-    default=today,
-    metavar='DATE',
-    envvar=config.DATE_ENV_VAR,
-    help='Entry date to add media to. Defaults to today.',
-)
-@click.option(
     '-d', '--description',
     type=click.STRING,
     metavar='DESCRIPTION',
@@ -33,6 +25,13 @@ from diary.media.entries import add_entry_media, view_entry_media
     type=click.Path(exists=True, dir_okay=False),
     metavar='FILE',
 )
+@click.argument(
+    'date',
+    type=click.DateTime(formats=['%Y-%m-%d', '%d-%m-%Y']),
+    default=today,
+    metavar='DATE',
+    envvar=config.DATE_ENV_VAR,
+)
 def add_media(date: datetime, name: str, description: str, file: str):
     """
     Add media to an entry.
@@ -48,24 +47,23 @@ def add_media(date: datetime, name: str, description: str, file: str):
 
 
 @click.command(name='view')
-@click.option(
-    '-d', '--date',
-    type=click.DateTime(formats=['%Y-%m-%d', '%d-%m-%Y']),
-    default=today,
-    metavar='DATE',
-    envvar=config.DATE_ENV_VAR,
-    help='Entry date to add media to. Defaults to today.',
-)
 @click.argument(
     'file',
     type=click.STRING,
     metavar='FILE',
 )
+@click.argument(
+    'date',
+    type=click.DateTime(formats=['%Y-%m-%d', '%d-%m-%Y']),
+    default=today,
+    metavar='DATE',
+    envvar=config.DATE_ENV_VAR,
+)
 def view_media(date: datetime, file: str):
     """
     View entry media file.
 
-    Provide a file name present in entry and an entry date if needed.
+    Provide a file name FILE present in entry and an entry date DATE if needed.
     """
 
     entry_name = get_name(date)
