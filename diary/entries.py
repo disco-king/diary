@@ -4,8 +4,9 @@ import click
 
 from diary import config
 from diary.utils.entries import (
-    get_entry_path, get_metadata_path, get_metadata, upsert_metadata
+    get_entry_path, get_metadata_path, get_metadata, upsert_metadata,
 )
+from diary.utils.models import Entry
 
 
 def get_entry_names() -> list[str] | None:
@@ -17,7 +18,7 @@ def get_entry_names() -> list[str] | None:
 
 
 def edit_entry(entry_name: str):
-    entry_path = get_entry_path(entry_name=entry_name)
+    entry_path = get_entry_path(entry_name=entry_name, create=True)
     if entry_path is None:
         click.echo(f'could not create entry in {config.DATA_DIR}, check access')
     else:
@@ -33,16 +34,16 @@ def _iterate_over_entries(
 
     index = 1
     for entry in entries:
-        entry_metadata = get_metadata(entry_name=entry)
+        entry_metadata = get_metadata(entry_name=entry) or Entry()
 
         if tags:
-            entry_tags = set(entry_metadata.get(config.METADATA_TAGS_KEY, []))
+            entry_tags = set(entry_metadata.tags)
             if not entry_tags.intersection(tags):
                 continue
 
         displayed_entry = f'{click.style(str(index) + ".", fg="green")} {entry}'
-        if title := entry_metadata.get(config.METADATA_TITLE_KEY):
-            displayed_entry += f' - {title}'
+        if entry_metadata.title:
+            displayed_entry += f' - {entry_metadata.title}'
         displayed_entry += '\n'
 
         result_map[index] = entry
@@ -65,7 +66,7 @@ def list_entries(tags: tuple[str], pages: bool, no_return: bool) -> dict[int, st
     tags = set(tags)
     result_map = {}
 
-    entries = _iterate_over_entries(entries=entries, result_map=result_map, tags=tags, no_tip=no_return)
+    entries = list(_iterate_over_entries(entries=entries, result_map=result_map, tags=tags, no_tip=no_return))
     if pages or entry_count > config.NON_PAGED_ENTRY_COUNT:
         click.echo_via_pager(entries)
     else:
@@ -78,14 +79,15 @@ def list_entries(tags: tuple[str], pages: bool, no_return: bool) -> dict[int, st
 def add_metadata(entry_name: str, title: str = None, tags: tuple[str] = None):
     if not title and not tags:
         return
+    tags = list(tags)
 
-    metadata_path = get_metadata_path(entry_name=entry_name)
+    metadata_path = get_metadata_path(entry_name=entry_name, create=True)
 
     if metadata_path is None:
         click.echo(f'could not edit metadata in {config.DATA_DIR}, check access')
         return
 
-    upsert_metadata(str(metadata_path), title=title, tags=tags)
+    upsert_metadata(str(metadata_path), entry_data=Entry(title=title, tags=tags))
 
 
 def view_entry(entry_name: str, short: bool):
@@ -96,36 +98,32 @@ def view_entry(entry_name: str, short: bool):
         return
 
     metadata = get_metadata(entry_name=entry_name)
-    entry_title = metadata.get(config.METADATA_TITLE_KEY)
-    entry_tags = metadata.get(config.METADATA_TAGS_KEY, [])
-    entry_media = metadata.get(config.METADATA_MEDIA_KEY)
     with open(str(entry_path), 'r') as f:
         entry_text = f.read()
 
-    if not (entry_title or entry_tags or entry_media or entry_text):
+    if metadata is None and not entry_text:
         click.echo(f'{entry_name} is empty')
         return
 
+    metadata = metadata if metadata is not None else Entry()
     add_spacing = not short
 
     click.echo(nl=add_spacing)
-    click.echo(f'{click.style("Title:", fg="green")} {entry_title}')
+    click.echo(f'{click.style("Title:", fg="green")} {metadata.title or ""}')
     click.echo(nl=add_spacing)
-    click.echo(f'{click.style("Tags:", fg="green")} {", ".join(entry_tags)}')
-    if entry_media:
+    click.echo(f'{click.style("Tags:", fg="green")} {", ".join(metadata.tags)}')
+    if metadata.media:
         click.echo(nl=add_spacing)
         click.echo(click.style("Media:", fg="green"))
-        for media_file in entry_media:
-            fname = media_file.get(config.MEDIA_META_NAME_KEY, '')
+        for media_file in metadata.media:
+            fname = media_file.file_name
             click.echo(
                 f'{click.style("Name:", fg="green")} {fname}'.ljust(config.META_ATTR_WIDTH),
                 nl=False
             )
-            if file_description := media_file.get(config.MEDIA_META_DESCRIPTION_KEY):
-                click.echo(
-                    f' {click.style("Description:", fg="green")} {file_description}'.ljust(config.META_ATTR_WIDTH),
-                    nl=False
-                )
+            if media_file.description:
+                description = f' {click.style("Description:", fg="green")} {media_file.description}'
+                click.echo(description.ljust(config.META_ATTR_WIDTH), nl=False)
             click.echo()
     if entry_text:
         click.echo(nl=add_spacing)
@@ -142,7 +140,9 @@ def list_entry_tags():
 
     tags = set()
     for entry in entries:
-        entry_tags = set(get_metadata(entry_name=entry).get(config.METADATA_TAGS_KEY, []))
+        if not (metadata := get_metadata(entry_name=entry)):
+            continue
+        entry_tags = set(metadata.tags)
         tags.update(entry_tags)
 
     if tags:

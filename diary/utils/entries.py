@@ -2,9 +2,14 @@ from pathlib import Path
 import json
 
 from diary import config
+from diary.utils.models import Entry, MediaEntry
 
 
-def check_file_ok(directory: Path, file: Path = None) -> bool:
+def check_file_ok(directory: Path, file: Path = None, create: bool = False) -> bool:
+
+    if not create:
+        return directory.exists() and (file is None or file.exists())
+
     try:
         directory.mkdir(parents=True, exist_ok=True)
         if file is not None:
@@ -14,78 +19,74 @@ def check_file_ok(directory: Path, file: Path = None) -> bool:
     return True
 
 
-def get_entry_path(entry_name: str) -> Path | None:
+def get_entry_path(entry_name: str, create: bool = False) -> Path | None:
     subdirectory = config.DATA_DIR / entry_name
     filename = subdirectory / config.ENTRY_FILE_NAME
 
-    if not check_file_ok(directory=subdirectory, file=filename):
+    if not check_file_ok(directory=subdirectory, file=filename, create=create):
         return None
     return filename
 
 
-def get_entry_media_path(entry_name: str) -> Path | None:
+def get_entry_media_path(entry_name: str, create: bool = False) -> Path | None:
     subdirectory = config.DATA_DIR / entry_name / config.MEDIA_SUBDIR_NAME
 
-    if not check_file_ok(directory=subdirectory):
+    if not check_file_ok(directory=subdirectory, create=create):
         return None
     return subdirectory
 
 
-def get_metadata_path(entry_name: str) -> Path | None:
+def get_metadata_path(entry_name: str, create: bool = False) -> Path | None:
     subdirectory = config.DATA_DIR / entry_name
     filename = subdirectory / config.METADATA_FILE_NAME
 
-    if not check_file_ok(directory=subdirectory, file=filename):
+    if not check_file_ok(directory=subdirectory, file=filename, create=create):
         return None
     return filename
 
 
-def get_metadata(entry_name: str, metadata_field: str = None) -> dict:
-    metadata_path = get_metadata_path(entry_name)
+def get_metadata(entry_name: str, create: bool = False) -> Entry | None:
+    metadata_path = get_metadata_path(entry_name, create=create)
 
     if metadata_path is None:
-        return {}
+        return None
 
     with open(str(metadata_path), 'r') as f:
         content = f.read()
 
-    metadata = json.loads(content) if content else {}
-
-    return metadata.get(metadata_field, None) if metadata_field else metadata
+    return Entry.from_dict(json.loads(content) if content else {})
 
 
 def update_media_metadata(
-    current: list[dict[str, str]],
-    update: list[dict[str, str]]
-) -> list[dict[str, str]]:
-    existing_data_mapping = {i[config.MEDIA_META_NAME_KEY]: i for i in current}
-    update_data_mapping = {i[config.MEDIA_META_NAME_KEY]: i for i in update}
+    current: list[MediaEntry],
+    update: list[MediaEntry]
+) -> list[MediaEntry]:
+    existing_data_mapping = {i.file_name: i for i in current}
+    update_data_mapping = {i.file_name: i for i in update}
 
     existing_data_mapping.update(update_data_mapping)
     return list(existing_data_mapping.values())
 
 
 def upsert_metadata(
-        metadata_path: str,
-        title: str = None,
-        tags: tuple[str] = None,
-        media_entries: list[dict[str, str]] = None,
+    metadata_path: str,
+    entry_data: Entry
 ):
     with open(metadata_path, 'r') as f:
         content = f.read()
 
-    metadata = json.loads(content) if content else {}
-    if title:
-        metadata[config.METADATA_TITLE_KEY] = title
-    if tags:
-        existing_tags: list = metadata.get(config.METADATA_TAGS_KEY, [])
-        existing_tags.extend(tags)
-        metadata[config.METADATA_TAGS_KEY] = list(set(existing_tags))
-    if media_entries:
-        existing_data = metadata.get(config.METADATA_MEDIA_KEY, [])
-        metadata[config.METADATA_MEDIA_KEY] = update_media_metadata(
-            current=existing_data, update=media_entries
+    metadata = Entry.from_dict(json.loads(content) if content else {})
+    if entry_data.title:
+        metadata.title = entry_data.title
+    if entry_data.tags:
+        existing_tags: list = metadata.tags
+        existing_tags.extend(entry_data.tags)
+        metadata.tags = list(set(existing_tags))
+    if entry_data.media:
+        existing_data = metadata.media
+        metadata.media = update_media_metadata(
+            current=existing_data, update=entry_data.media
         )
 
     with open(metadata_path, 'w') as f:
-        f.write(json.dumps(metadata))
+        f.write(json.dumps(metadata.to_dict()))

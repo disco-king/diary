@@ -4,7 +4,7 @@ import click
 
 from diary import config
 from diary.entries import (
-    edit_entry, list_entries, add_metadata, list_entry_tags, view_entry
+    edit_entry, list_entries, add_metadata, list_entry_tags, view_entry,
 )
 from diary.media.cli import media
 from diary.utils.cli import today, get_name
@@ -81,14 +81,14 @@ def view(date: datetime, short: bool):
     help='Paginate entries.',
 )
 @click.option(
-    '-n', '--noedit',
+    '-e', '--edit',
     is_flag=True,
-    help='Do not prompt for entry to edit.',
+    help='Choose an entry to edit.',
 )
-def list_(tags: tuple[str], pages: bool, noedit: bool):
+def list_(tags: tuple[str], pages: bool, edit: bool):
     """List existing entries."""
 
-    entries_map = list_entries(tags=tags, pages=pages, no_return=noedit)
+    entries_map = list_entries(tags=tags, pages=pages, no_return=(not edit))
     if entries_map:
         entry_num = click.prompt('Entry # to edit', default=0)
         if entry_num and (entry_name := entries_map.get(entry_num)):

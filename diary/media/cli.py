@@ -42,7 +42,7 @@ def add_media(date: datetime, name: str, description: str, file: str):
     """
 
     entry_name = get_name(date)
-    description = description.strip()
+    description = description.strip() if description else description
     add_entry_media(entry_name=entry_name, file_path=file, file_name=name, description=description)
 
 
