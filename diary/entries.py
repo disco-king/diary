@@ -7,6 +7,9 @@ from diary.utils.entries import (
     get_entry_path, get_metadata_path, get_metadata, upsert_metadata,
 )
 from diary.utils.models import Entry
+from diary.utils.editing import (
+    prompt_metadata_update, UserInputError, EmptyMetadataError, EditAbort
+)
 
 
 def get_entry_names() -> list[str] | None:
@@ -88,6 +91,28 @@ def add_metadata(entry_name: str, title: str = None, tags: tuple[str] = None):
         return
 
     upsert_metadata(str(metadata_path), entry_data=Entry(title=title, tags=tags))
+
+
+def update_entry_meta(entry_name: str):
+
+    if not get_entry_path(entry_name=entry_name):
+        click.echo('entry not found, cannot edit metadata')
+        return
+
+    metadata_path = get_metadata_path(entry_name=entry_name, create=True)
+
+    if metadata_path is None:
+        click.echo(f'could not edit metadata in {config.DATA_DIR}, check access')
+        return
+
+    try:
+        prompt_metadata_update(metadata_path=str(metadata_path))
+    except (UserInputError, EmptyMetadataError) as e:
+        click.echo(f'error: {e}')
+    except EditAbort as e:
+        click.echo(e)
+    else:
+        click.echo(f'successfully updated metada for entry {entry_name}')
 
 
 def view_entry(entry_name: str, short: bool):

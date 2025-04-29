@@ -17,3 +17,9 @@ SHORT_TEXT_SYMBOL_LIMIT = 30
 META_ATTR_WIDTH = 34
 
 DATE_ENV_VAR = 'DIARY_TODAY'
+
+META_EDIT_TEXT = '''# Edit metadata values below.
+# All edited values must follow the format `key: [value[,value,...]]`.
+# Only uncommented lines following the format will be updated.
+# If a key is removed or left with no value, it will be erased in metadata.
+'''

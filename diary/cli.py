@@ -8,6 +8,7 @@ from diary.entries import (
 )
 from diary.media.cli import media
 from diary.utils.cli import today, get_name
+from diary.entries import update_entry_meta
 
 
 @click.command(name='write')
@@ -68,6 +69,21 @@ def view(date: datetime, short: bool):
     view_entry(entry_name=entry_name, short=short)
 
 
+@click.command(name='update-meta')
+@click.argument(
+    'date',
+    type=click.DateTime(formats=['%Y-%m-%d', '%d-%m-%Y']),
+    default=today,
+    metavar='DATE',
+    envvar=config.DATE_ENV_VAR,
+)
+def update_meta(date: datetime):
+    """Update entry metadata."""
+
+    entry_name = get_name(date)
+    update_entry_meta(entry_name=entry_name)
+
+
 @click.command(name='list')
 @click.option(
     '-t', '--tags',
@@ -112,4 +128,5 @@ cli.add_command(write)
 cli.add_command(list_)
 cli.add_command(list_tags)
 cli.add_command(view)
+cli.add_command(update_meta)
 cli.add_command(media)
