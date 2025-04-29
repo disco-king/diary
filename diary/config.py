@@ -27,3 +27,11 @@ META_EDIT_TEXT = '''# Edit metadata values below.
 MEDIA_META_EDIT_TEXT = '''# Note: changing the file name is not supported.
 # The command will error out.
 '''
+
+ROOT_HELP = f"""
+A CLI tool for documenting your life.
+
+Most commands take a DATE argument which determines which day's entry to manage.
+If the argument is not provided, today's entry is chosen by default.
+It is possible to set the {DATE_ENV_VAR} variable to change the default date.
+"""

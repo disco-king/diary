@@ -60,11 +60,7 @@ def add_media(date: datetime, name: str, description: str, file: str):
     envvar=config.DATE_ENV_VAR,
 )
 def view_media(date: datetime, file: str):
-    """
-    View entry media file.
-
-    Provide a file name FILE present in entry and an entry date DATE if needed.
-    """
+    """View entry media file."""
 
     entry_name = get_name(date)
     view_entry_media(entry_name=entry_name, file=file)
@@ -84,11 +80,7 @@ def view_media(date: datetime, file: str):
     envvar=config.DATE_ENV_VAR,
 )
 def update_meta(file: str, date: datetime):
-    """
-    Update file metadata.
-
-    Provide a file name FILE present in entry and an entry date DATE if needed.
-    """
+    """Update file metadata."""
 
     entry_name = get_name(date)
     update_media_meta(entry_name=entry_name, file_name=file)
@@ -96,7 +88,13 @@ def update_meta(file: str, date: datetime):
 
 @click.group()
 def media():
-    """Manage entry media."""
+    """
+    Manage entry media.
+
+    All commands in this group take a required argument FILE which determines the managed file.
+    It is either a local file path to add to an entry, or a name of a file that belongs to an entry.
+    """
+
     pass
 
 

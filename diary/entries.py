@@ -1,4 +1,5 @@
 import os
+import shutil
 
 import click
 
@@ -157,6 +158,22 @@ def view_entry(entry_name: str, short: bool):
             entry_text = entry_text[:config.SHORT_TEXT_SYMBOL_LIMIT] + '...'
         click.echo(entry_text)
     click.echo(nl=add_spacing)
+
+
+def delete_entry(entry_name: str):
+    entry_path = get_entry_path(entry_name=entry_name)
+
+    if entry_path is None:
+        click.echo(f'could not find entry {entry_name}')
+        return
+
+    try:
+        shutil.rmtree(entry_path.parent)
+    except Exception:
+        click.echo(f'could not delete entry from {config.DATA_DIR}')
+        return
+
+    click.echo(f'successfully deleted entry {entry_name}')
 
 
 def list_entry_tags():

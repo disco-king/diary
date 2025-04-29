@@ -5,6 +5,7 @@ import click
 from diary import config
 from diary.entries import (
     edit_entry, list_entries, add_metadata, list_entry_tags, view_entry,
+    delete_entry,
 )
 from diary.media.cli import media
 from diary.utils.cli import today, get_name
@@ -31,12 +32,7 @@ from diary.entries import update_entry_meta
     help='Add tags to the entry (accepting one or more).',
 )
 def write(date: datetime, name: str, tags: tuple[str]):
-    """
-    Write an entry.
-
-    Provide standart format date in DATE to write entry for a specific day.
-    Edits today's entry by default.
-    """
+    """Write an entry."""
 
     entry_name = get_name(date)
     edit_entry(entry_name)
@@ -58,12 +54,7 @@ def write(date: datetime, name: str, tags: tuple[str]):
     help='Truncate entry for brevity.',
 )
 def view(date: datetime, short: bool):
-    """
-    View entry.
-
-    Provide standart format date in DATE to view entry for a specific day.
-    Views today's entry by default.
-    """
+    """View entry."""
 
     entry_name = get_name(date)
     view_entry(entry_name=entry_name, short=short)
@@ -111,6 +102,22 @@ def list_(tags: tuple[str], pages: bool, edit: bool):
             edit_entry(entry_name=entry_name)
 
 
+@click.command(name='delete')
+@click.argument(
+    'date',
+    type=click.DateTime(formats=['%Y-%m-%d', '%d-%m-%Y']),
+    default=today,
+    metavar='DATE',
+    envvar=config.DATE_ENV_VAR,
+)
+@click.confirmation_option(prompt='Delete the entry with all its data?')
+def delete(date: datetime):
+    """Delete an entry."""
+
+    entry_name = get_name(date)
+    delete_entry(entry_name=entry_name)
+
+
 @click.command(name='tags')
 def list_tags():
     """List existing tags."""
@@ -118,9 +125,8 @@ def list_tags():
     list_entry_tags()
 
 
-@click.group()
+@click.group(help=config.ROOT_HELP)
 def cli():
-    """A CLI tool for documenting your life."""
     pass
 
 
@@ -129,4 +135,5 @@ cli.add_command(list_)
 cli.add_command(list_tags)
 cli.add_command(view)
 cli.add_command(update_meta)
+cli.add_command(delete)
 cli.add_command(media)
