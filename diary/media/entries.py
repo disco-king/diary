@@ -7,7 +7,7 @@ import click
 from diary import config
 from diary.utils.entries import (
     get_metadata_path, get_entry_media_path, upsert_metadata,
-    get_metadata, get_entry_path
+    get_metadata, get_entry_path, remove_file_metadata
 )
 from diary.utils.editing import (
     prompt_metadata_update, UserInputError, EmptyMetadataError, EditAbort
@@ -90,3 +90,23 @@ def update_media_meta(entry_name: str, file_name: str):
         click.echo(e)
     else:
         click.echo(f'successfully updated metada for entry {entry_name}')
+
+
+def delete_media(entry_name: str, file: str):
+    metadata_path = get_metadata_path(entry_name=entry_name)
+    media_dir_path = get_entry_media_path(entry_name=entry_name)
+
+    if not metadata_path or not media_dir_path or not (files := [d.name for d in media_dir_path.iterdir()]):
+        click.echo(f'no media data found for entry {entry_name}')
+        return
+
+    media_path = media_dir_path / file
+
+    if not media_path.exists():
+        click.echo(f'file {file} not found for entry {entry_name}')
+        return
+
+    media_path.unlink()
+    remove_file_metadata(metadata_path=str(metadata_path), file_name=file)
+
+    click.echo(f'successfully deleted file {file} for entry {entry_name}')

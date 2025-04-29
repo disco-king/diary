@@ -90,3 +90,18 @@ def upsert_metadata(
 
     with open(metadata_path, 'w') as f:
         f.write(json.dumps(metadata.to_dict()))
+
+
+def remove_file_metadata(metadata_path: str, file_name: str):
+    with open(metadata_path, 'r') as f:
+        content = f.read()
+
+    metadata = Entry.from_dict(json.loads(content) if content else {})
+    new_media = []
+    for file in metadata.media:
+        if file.file_name != file_name:
+            new_media.append(file)
+    metadata.media = new_media
+
+    with open(metadata_path, 'w') as f:
+        f.write(json.dumps(metadata.to_dict()))
