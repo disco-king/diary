@@ -68,7 +68,7 @@ def view_media(date: datetime, file: str):
     view_entry_media(entry_name=entry_name, file=file)
 
 
-@click.command(name='update-meta')
+@click.command(name='edit-meta')
 @click.argument(
     'file',
     type=click.STRING,
@@ -81,8 +81,8 @@ def view_media(date: datetime, file: str):
     metavar='DATE',
     envvar=config.DATE_ENV_VAR,
 )
-def update_meta(file: str, date: datetime):
-    """Update file metadata."""
+def edit_meta(file: str, date: datetime):
+    """Edit file metadata."""
 
     entry_name = get_name(date)
     update_media_meta(entry_name=entry_name, file_name=file)
@@ -123,5 +123,5 @@ def media():
 
 media.add_command(add_media)
 media.add_command(view_media)
-media.add_command(update_meta)
+media.add_command(edit_meta)
 media.add_command(delete)

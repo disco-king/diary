@@ -60,7 +60,7 @@ def view(date: datetime, short: bool):
     view_entry(entry_name=entry_name, short=short)
 
 
-@click.command(name='update-meta')
+@click.command(name='edit-meta')
 @click.argument(
     'date',
     type=click.DateTime(formats=['%Y-%m-%d', '%d-%m-%Y']),
@@ -68,8 +68,8 @@ def view(date: datetime, short: bool):
     metavar='DATE',
     envvar=config.DATE_ENV_VAR,
 )
-def update_meta(date: datetime):
-    """Update entry metadata."""
+def edit_meta(date: datetime):
+    """Edit entry metadata."""
 
     entry_name = get_name(date)
     update_entry_meta(entry_name=entry_name)
@@ -134,6 +134,6 @@ cli.add_command(write)
 cli.add_command(list_)
 cli.add_command(list_tags)
 cli.add_command(view)
-cli.add_command(update_meta)
+cli.add_command(edit_meta)
 cli.add_command(delete)
 cli.add_command(media)
