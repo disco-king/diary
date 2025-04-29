@@ -7,7 +7,10 @@ import click
 from diary import config
 from diary.utils.entries import (
     get_metadata_path, get_entry_media_path, upsert_metadata,
-    get_metadata
+    get_metadata, get_entry_path
+)
+from diary.utils.editing import (
+    prompt_metadata_update, UserInputError, EmptyMetadataError, EditAbort
 )
 from diary.utils.models import Entry, MediaEntry
 
@@ -65,3 +68,25 @@ def view_entry_media(entry_name: str, file: str):
     if file_meta.description:
         click.echo(f'{click.style("Description:", fg="green")} {file_meta.description}')
     click.launch(str(media_dir_path / file))
+
+
+def update_media_meta(entry_name: str, file_name: str):
+
+    if not get_entry_path(entry_name=entry_name):
+        click.echo('entry not found, cannot edit metadata')
+        return
+
+    metadata_path = get_metadata_path(entry_name=entry_name)
+
+    if metadata_path is None:
+        click.echo(f'could not edit metadata in {config.DATA_DIR}, check access')
+        return
+
+    try:
+        prompt_metadata_update(metadata_path=str(metadata_path), file_name=file_name)
+    except (UserInputError, EmptyMetadataError) as e:
+        click.echo(f'error: {e}')
+    except EditAbort as e:
+        click.echo(e)
+    else:
+        click.echo(f'successfully updated metada for entry {entry_name}')

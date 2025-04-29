@@ -88,17 +88,18 @@ def parse_output(update_text: str, update_handlers: list[MetaField]) -> dict[str
 
 
 def get_media_updates(metadata: Entry, file_name: str) -> Entry:
-    file = None
+    file_to_update = None
     media = metadata.media
     for file in media:
         if file.file_name == file_name:
+            file_to_update = file
             break
-    if file is None:
+    if file_to_update is None:
         raise EmptyMetadataError(f'metadata not found for file {file_name}')
 
     prompt_lines = form_input([
-        MetaField(name='file_name', data=file.file_name, handler=form_str_input),
-        MetaField(name='description', data=file.description, handler=form_str_input),
+        MetaField(name='file_name', data=file_to_update.file_name, handler=form_str_input),
+        MetaField(name='description', data=file_to_update.description, handler=form_str_input),
     ])
 
     prompt_lines.insert(0, config.META_EDIT_TEXT)
@@ -123,7 +124,7 @@ def get_media_updates(metadata: Entry, file_name: str) -> Entry:
         raise UserInputError(f'could not parse metadata: {e}')
 
     if updated_file.file_name != file_name:
-        UserInputError('cannot change file name')
+        raise UserInputError('cannot change file name')
 
     new_media = []
     for file in media:
