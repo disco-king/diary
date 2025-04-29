@@ -103,6 +103,7 @@ def get_media_updates(metadata: Entry, file_name: str) -> Entry:
     ])
 
     prompt_lines.insert(0, config.META_EDIT_TEXT)
+    prompt_lines.insert(1, config.MEDIA_META_EDIT_TEXT)
     editor_text = '\n'.join(prompt_lines)
 
     update_text = click.edit(editor_text)

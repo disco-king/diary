@@ -23,3 +23,7 @@ META_EDIT_TEXT = '''# Edit metadata values below.
 # Only uncommented lines following the format will be updated.
 # If a key is removed or left with no value, it will be erased in metadata.
 '''
+
+MEDIA_META_EDIT_TEXT = '''# Note: changing the file name is not supported.
+# The command will error out.
+'''
