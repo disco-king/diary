@@ -7,7 +7,7 @@ from diary import config
 from diary.utils.entries import (
     get_entry_path, get_metadata_path, get_metadata, upsert_metadata,
 )
-from diary.utils.models import Entry
+from diary.utils.models import Entry, MediaEntry
 from diary.utils.editing import (
     prompt_metadata_update, UserInputError, EmptyMetadataError, EditAbort
 )
@@ -116,6 +116,22 @@ def update_entry_meta(entry_name: str):
         click.echo(f'successfully updated metada for entry {entry_name}')
 
 
+def echo_media_data(media: list[MediaEntry]):
+    prefix = 'Name:'
+    extra_spacing = 12
+    max_line_length = max([len(m.file_name) for m in media]) + len(prefix) + extra_spacing
+    for media_file in media:
+        fname = media_file.file_name
+        click.echo(
+            f'{click.style(prefix, fg="green")} {fname}'.ljust(max_line_length),
+            nl=False
+        )
+        if media_file.description:
+            description = f' {click.style("Description:", fg="green")} {media_file.description}'
+            click.echo(description, nl=False)
+        click.echo()
+
+
 def view_entry(entry_name: str, short: bool):
     entry_path = get_entry_path(entry_name=entry_name)
 
@@ -141,16 +157,7 @@ def view_entry(entry_name: str, short: bool):
     if metadata.media:
         click.echo(nl=add_spacing)
         click.echo(click.style("Media:", fg="green"))
-        for media_file in metadata.media:
-            fname = media_file.file_name
-            click.echo(
-                f'{click.style("Name:", fg="green")} {fname}'.ljust(config.META_ATTR_WIDTH),
-                nl=False
-            )
-            if media_file.description:
-                description = f' {click.style("Description:", fg="green")} {media_file.description}'
-                click.echo(description.ljust(config.META_ATTR_WIDTH), nl=False)
-            click.echo()
+        echo_media_data(metadata.media)
     if entry_text:
         click.echo(nl=add_spacing)
         click.echo(click.style("Entry:", fg="green"), nl=add_spacing)
