@@ -30,7 +30,14 @@ MEDIA_META_EDIT_TEXT = '''# Note: changing the file name is not supported.
 ROOT_HELP = f"""
 A CLI tool for documenting your life.
 
-Most commands take a DATE argument which determines which day's entry to manage.
-If the argument is not provided, today's entry is chosen by default.
-It is possible to set the {DATE_ENV_VAR} variable to change the default date.
+Most commands take a DATE (Y-M-D) parameter which determines which day's entry to manage.
+If the parameter is not provided, today's entry is chosen by default.
+It is also possible to set the {DATE_ENV_VAR} variable to change the default date.
+"""
+
+MEDIA_HELP = """
+Manage entry media.
+
+All commands in this group take a required argument FILE which determines the managed file.
+It is either a local file path to add to an entry, or a name of a file that belongs to an entry.
 """

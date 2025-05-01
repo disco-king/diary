@@ -11,11 +11,12 @@ from diary.media.entries import (
 
 date_option = click.option(
     '-d', '--date',
-    type=click.DateTime(formats=['%Y-%m-%d', '%d-%m-%Y']),
+    type=click.DateTime(formats=['%Y-%m-%d']),
     default=today,
     metavar='DATE',
     envvar=config.DATE_ENV_VAR,
     shell_complete=complete_date,
+    help='Date of the entry. Today by default.'
 )
 file_argument = click.argument(
     'file',
@@ -26,11 +27,17 @@ file_argument = click.argument(
 
 
 @click.command(name='add')
+@click.argument(
+    'file',
+    type=click.Path(exists=True, dir_okay=False),
+    metavar='FILE',
+)
+@date_option
 @click.option(
     '-n', '--name',
     type=click.STRING,
     metavar='NAME',
-    help='New name for file. Replaces everything before the last extention.'
+    help='New name for file. Replaces everything before the extentions.'
 )
 @click.option(
     '-c', '--comment',
@@ -38,17 +45,11 @@ file_argument = click.argument(
     metavar='COMMENT',
     help='Short description of file contents.',
 )
-@date_option
-@click.argument(
-    'file',
-    type=click.Path(exists=True, dir_okay=False),
-    metavar='FILE',
-)
-def add_media(date: datetime, file: str, name: str, comment: str):
+def add_media(file: str, date: datetime, name: str, comment: str):
     """
     Add media to an entry.
 
-    Provide a file path in the FILE param.
+    Provide a local file path in the FILE param.
     The file will be added to the entry DATE or today's entry by default.
     The file can be named via NAME and described via COMMENT options - useful for later management.
     """
@@ -59,20 +60,20 @@ def add_media(date: datetime, file: str, name: str, comment: str):
 
 
 @click.command(name='view')
-@date_option
 @file_argument
-def view_media(date: datetime, file: str):
-    """View entry media file."""
+@date_option
+def view_media(file: str, date: datetime):
+    """View an entry's media file."""
 
     entry_name = get_name(date)
     view_entry_media(entry_name=entry_name, file=file)
 
 
 @click.command(name='edit-meta')
-@date_option
 @file_argument
+@date_option
 def edit_meta(file: str, date: datetime):
-    """Edit file metadata."""
+    """Edit an entry's file metadata."""
 
     entry_name = get_name(date)
     update_media_meta(entry_name=entry_name, file_name=file)
@@ -83,21 +84,14 @@ def edit_meta(file: str, date: datetime):
 @file_argument
 @click.confirmation_option(prompt='Delete the file with all its metadata?')
 def delete(file: str, date: datetime):
-    """Delete a file."""
+    """Delete an entry's file."""
 
     entry_name = get_name(date)
     delete_media(entry_name=entry_name, file=file)
 
 
-@click.group()
+@click.group(help=config.MEDIA_HELP)
 def media():
-    """
-    Manage entry media.
-
-    All commands in this group take a required argument FILE which determines the managed file.
-    It is either a local file path to add to an entry, or a name of a file that belongs to an entry.
-    """
-
     pass
 
 
