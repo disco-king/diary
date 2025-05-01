@@ -12,6 +12,10 @@ from diary.utils.cli import today, get_name
 from diary.entries import update_entry_meta
 
 
+def complete_date(ctx, param, incomplete):
+    return [p.stem for p in config.DATA_DIR.iterdir() if p.stem.startswith(incomplete)]
+
+
 @click.command(name='write')
 @click.argument(
     'date',
@@ -19,6 +23,7 @@ from diary.entries import update_entry_meta
     default=today,
     metavar='DATE',
     envvar=config.DATE_ENV_VAR,
+    shell_complete=complete_date,
 )
 @click.option(
     '-n', '--name',
@@ -47,6 +52,7 @@ def write(date: datetime, name: str, tags: tuple[str]):
     default=today,
     metavar='DATE',
     envvar=config.DATE_ENV_VAR,
+    shell_complete=complete_date,
 )
 @click.option(
     '-s', '--short',
@@ -67,6 +73,7 @@ def view(date: datetime, short: bool):
     default=today,
     metavar='DATE',
     envvar=config.DATE_ENV_VAR,
+    shell_complete=complete_date,
 )
 def edit_meta(date: datetime):
     """Edit entry metadata."""
@@ -109,6 +116,7 @@ def list_(tags: tuple[str], pages: bool, edit: bool):
     default=today,
     metavar='DATE',
     envvar=config.DATE_ENV_VAR,
+    shell_complete=complete_date,
 )
 @click.confirmation_option(prompt='Delete the entry with all its data?')
 def delete(date: datetime):
