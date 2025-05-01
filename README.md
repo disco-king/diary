@@ -16,3 +16,9 @@ Run:
 ```
 diary
 ```
+
+Enable shell completion in bash:
+```
+echo 'eval "$(_DIARY_COMPLETE=bash_source diary)"' >> ~/.bashrc
+```
+
