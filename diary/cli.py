@@ -8,16 +8,11 @@ from diary.entries import (
     delete_entry,
 )
 from diary.media.cli import media
-from diary.utils.cli import today, get_name
+from diary.utils.cli import today, get_name, complete_date
 from diary.entries import update_entry_meta
 
 
-def complete_date(ctx, param, incomplete):
-    return [p.stem for p in config.DATA_DIR.iterdir() if p.stem.startswith(incomplete)]
-
-
-@click.command(name='write')
-@click.argument(
+date_argument = click.argument(
     'date',
     type=click.DateTime(formats=['%Y-%m-%d', '%d-%m-%Y']),
     default=today,
@@ -25,6 +20,10 @@ def complete_date(ctx, param, incomplete):
     envvar=config.DATE_ENV_VAR,
     shell_complete=complete_date,
 )
+
+
+@click.command(name='write')
+@date_argument
 @click.option(
     '-n', '--name',
     type=click.STRING,
@@ -46,14 +45,7 @@ def write(date: datetime, name: str, tags: tuple[str]):
 
 
 @click.command(name='view')
-@click.argument(
-    'date',
-    type=click.DateTime(formats=['%Y-%m-%d', '%d-%m-%Y']),
-    default=today,
-    metavar='DATE',
-    envvar=config.DATE_ENV_VAR,
-    shell_complete=complete_date,
-)
+@date_argument
 @click.option(
     '-s', '--short',
     is_flag=True,
@@ -67,14 +59,7 @@ def view(date: datetime, short: bool):
 
 
 @click.command(name='edit-meta')
-@click.argument(
-    'date',
-    type=click.DateTime(formats=['%Y-%m-%d', '%d-%m-%Y']),
-    default=today,
-    metavar='DATE',
-    envvar=config.DATE_ENV_VAR,
-    shell_complete=complete_date,
-)
+@date_argument
 def edit_meta(date: datetime):
     """Edit entry metadata."""
 
@@ -110,14 +95,7 @@ def list_(tags: tuple[str], pages: bool, edit: bool):
 
 
 @click.command(name='delete')
-@click.argument(
-    'date',
-    type=click.DateTime(formats=['%Y-%m-%d', '%d-%m-%Y']),
-    default=today,
-    metavar='DATE',
-    envvar=config.DATE_ENV_VAR,
-    shell_complete=complete_date,
-)
+@date_argument
 @click.confirmation_option(prompt='Delete the entry with all its data?')
 def delete(date: datetime):
     """Delete an entry."""
