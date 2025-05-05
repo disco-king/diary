@@ -150,19 +150,21 @@ def view_entry(entry_name: str, short: bool):
     metadata = metadata if metadata is not None else Entry()
     add_spacing = not short
 
-    click.echo(nl=add_spacing)
-    click.echo(f'{click.style("Title:", fg="green")} {metadata.title or ""}')
-    click.echo(nl=add_spacing)
-    click.echo(f'{click.style("Tags:", fg="green")} {", ".join(metadata.tags)}')
+    if metadata.title:
+        click.echo(nl=add_spacing)
+        click.echo(f'{click.style("Title:", fg="green")} {metadata.title}')
+    if metadata.tags:
+        click.echo(nl=add_spacing)
+        click.echo(f'{click.style("Tags:", fg="green")} {", ".join(metadata.tags)}')
     if metadata.media:
         click.echo(nl=add_spacing)
         click.echo(click.style("Media:", fg="green"))
         echo_media_data(metadata.media)
     if entry_text:
         click.echo(nl=add_spacing)
-        click.echo(click.style("Entry:", fg="green"), nl=add_spacing)
+        click.echo(click.style("Entry: ", fg="green"), nl=add_spacing)
         if short:
-            entry_text = entry_text[:config.SHORT_TEXT_SYMBOL_LIMIT] + '...'
+            entry_text = entry_text[:config.SHORT_TEXT_SYMBOL_LIMIT].strip() + '...'
         click.echo(entry_text)
     click.echo(nl=add_spacing)
 
