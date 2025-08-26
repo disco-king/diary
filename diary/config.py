@@ -30,7 +30,7 @@ MEDIA_META_EDIT_TEXT = '''# Note: changing the file name is not supported.
 ROOT_HELP = f"""
 A CLI tool for documenting your life.
 
-Most commands take a DATE (Y-M-D) parameter which determines which day's entry to manage.
+Most commands take a DATE (Y-M-D) parameter that determines which day's entry to manage.
 If the parameter is not provided, today's entry is chosen by default.
 It is also possible to set the {DATE_ENV_VAR} variable to change the default date.
 """
