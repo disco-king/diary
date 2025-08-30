@@ -98,12 +98,16 @@ def list_(tag: tuple[str], pages: bool, edit: bool):
 
 @click.command(name='delete')
 @entry_argument
-@click.confirmation_option(prompt='Delete the entry with all its data?')
-def delete(entry: date | int):
+@click.option(
+    '-y', '--yes',
+    is_flag=True,
+    help='Do not prompt for confirmation.',
+)
+def delete(entry: date | int, yes: bool):
     """Delete an entry."""
 
     entry_name = get_name(entry)
-    delete_entry(entry_name=entry_name)
+    delete_entry(entry_name=entry_name, do_not_prompt=yes)
 
 
 @click.command(name='tags')

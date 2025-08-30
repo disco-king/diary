@@ -15,7 +15,7 @@ from diary.utils.editing import (
 
 def get_entry_names() -> list[str] | None:
     if not os.path.exists(config.DATA_DIR):
-        click.echo('no entries exist')
+        click.echo('No entries found.')
         return
 
     return os.listdir(config.DATA_DIR)
@@ -24,7 +24,7 @@ def get_entry_names() -> list[str] | None:
 def edit_entry(entry_name: str):
     entry_path = get_entry_path(entry_name=entry_name, create=True)
     if entry_path is None:
-        click.echo(f'could not create entry in {config.DATA_DIR}, check access')
+        click.echo(f'Could not create entry in {config.DATA_DIR}, check access.')
     else:
         click.edit(filename=str(entry_path))
 
@@ -88,7 +88,7 @@ def add_metadata(entry_name: str, title: str = None, tags: tuple[str] = None):
     metadata_path = get_metadata_path(entry_name=entry_name, create=True)
 
     if metadata_path is None:
-        click.echo(f'could not edit metadata in {config.DATA_DIR}, check access')
+        click.echo(f'Could not edit metadata in {config.DATA_DIR}, check access.')
         return
 
     upsert_metadata(str(metadata_path), entry_data=Entry(title=title, tags=tags))
@@ -97,13 +97,13 @@ def add_metadata(entry_name: str, title: str = None, tags: tuple[str] = None):
 def update_entry_meta(entry_name: str):
 
     if not get_entry_path(entry_name=entry_name):
-        click.echo('entry not found, cannot edit metadata')
+        click.echo('Entry not found, cannot edit metadata.')
         return
 
     metadata_path = get_metadata_path(entry_name=entry_name, create=True)
 
     if metadata_path is None:
-        click.echo(f'could not edit metadata in {config.DATA_DIR}, check access')
+        click.echo(f'Could not edit metadata in {config.DATA_DIR}, check access.')
         return
 
     try:
@@ -113,7 +113,7 @@ def update_entry_meta(entry_name: str):
     except EditAbort as e:
         click.echo(e)
     else:
-        click.echo(f'successfully updated metada for entry {entry_name}')
+        click.echo(f'Successfully updated metada for entry {entry_name}.')
 
 
 def echo_media_data(media: list[MediaEntry]):
@@ -136,7 +136,7 @@ def view_entry(entry_name: str, short: bool):
     entry_path = get_entry_path(entry_name=entry_name)
 
     if entry_path is None:
-        click.echo(f'could not find entry {entry_name}')
+        click.echo(f'Could not find entry {entry_name}.')
         return
 
     metadata = get_metadata(entry_name=entry_name)
@@ -144,7 +144,7 @@ def view_entry(entry_name: str, short: bool):
         entry_text = f.read()
 
     if metadata is None and not entry_text:
-        click.echo(f'{entry_name} is empty')
+        click.echo(f'{entry_name} is empty.')
         return
 
     metadata = metadata if metadata is not None else Entry()
@@ -169,20 +169,26 @@ def view_entry(entry_name: str, short: bool):
     click.echo(nl=add_spacing)
 
 
-def delete_entry(entry_name: str):
+def delete_entry(entry_name: str, do_not_prompt: bool):
     entry_path = get_entry_path(entry_name=entry_name)
 
     if entry_path is None:
-        click.echo(f'could not find entry {entry_name}')
+        click.echo(f'Could not find entry {entry_name}.')
         return
+
+    if not do_not_prompt:
+        do_delete = click.confirm(text=f'Delete entry {entry_name} with all its data?')
+        if not do_delete:
+            click.echo('Aborting.')
+            return
 
     try:
         shutil.rmtree(entry_path.parent)
     except Exception:
-        click.echo(f'could not delete entry from {config.DATA_DIR}')
+        click.echo(f'Could not delete entry from {config.DATA_DIR}.')
         return
 
-    click.echo(f'successfully deleted entry {entry_name}')
+    click.echo(f'Successfully deleted entry {entry_name}.')
 
 
 def list_entry_tags():
@@ -202,4 +208,4 @@ def list_entry_tags():
         for tag in tags:
             click.echo(tag)
     else:
-        click.echo('no tags found')
+        click.echo('No tags found.')
