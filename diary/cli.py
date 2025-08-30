@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import date
 
 import click
 
@@ -10,72 +10,65 @@ from diary.entries import (
 from diary.media.cli import media
 from diary.utils.cli import today, get_name, complete_date
 from diary.entries import update_entry_meta
+from diary.types import ENTRY_REF
 
 
-date_argument = click.argument(
-    'date',
-    type=click.DateTime(formats=['%Y-%m-%d']),
+entry_argument = click.argument(
+    config.ENTRY_REF_VARNAME,
+    type=ENTRY_REF,
     default=today,
-    metavar='DATE',
+    metavar=config.ENTRY_REF_METAVAR,
     envvar=config.DATE_ENV_VAR,
     shell_complete=complete_date,
 )
 
 
-@click.command(name='write')
-@date_argument
+@click.command(name='write', help=config.WRITE_HELP)
+@entry_argument
 @click.option(
     '-n', '--name',
     type=click.STRING,
     help='Name the entry.',
-    metavar='NAME',
+    metavar=config.NAME_OPTION_METAVAR,
 )
 @click.option(
     '-t', '--tag',
     type=click.STRING,
     multiple=True,
     help='Add tags to the entry (accepting one or more).',
-    metavar='TAG',
+    metavar=config.TAG_OPTION_METAVAR,
 )
-def write(date: datetime, name: str, tag: tuple[str]):
-    """
-    Write an entry.
-
-    Write a new entry or edit an existing one.
-    The DATE parameter determines which entry to write,
-    and additional metadata can be added via NAME and TAG options.
-    """
-
-    entry_name = get_name(date)
+def write(entry: date | int, name: str, tag: tuple[str]):
+    entry_name = get_name(entry)
     edit_entry(entry_name)
     if name or tag:
         add_metadata(entry_name=entry_name, title=name, tags=tag)
 
 
 @click.command(name='view')
-@date_argument
+@entry_argument
 @click.option(
     '-s', '--short',
     is_flag=True,
     help='Truncate entry for brevity.',
 )
-def view(date: datetime, short: bool):
+def view(entry: date | int, short: bool):
     """View entry."""
 
-    entry_name = get_name(date)
+    entry_name = get_name(entry)
     view_entry(entry_name=entry_name, short=short)
 
 
 @click.command(name='edit-meta')
-@date_argument
-def edit_meta(date: datetime):
+@entry_argument
+def edit_meta(entry: date | int):
     """Edit entry metadata."""
 
-    entry_name = get_name(date)
+    entry_name = get_name(entry)
     update_entry_meta(entry_name=entry_name)
 
 
-@click.command(name='list')
+@click.command(name=config.LIST_CMDNAME)
 @click.option(
     '-t', '--tag',
     type=click.STRING,
@@ -104,12 +97,12 @@ def list_(tag: tuple[str], pages: bool, edit: bool):
 
 
 @click.command(name='delete')
-@date_argument
+@entry_argument
 @click.confirmation_option(prompt='Delete the entry with all its data?')
-def delete(date: datetime):
+def delete(entry: date | int):
     """Delete an entry."""
 
-    entry_name = get_name(date)
+    entry_name = get_name(entry)
     delete_entry(entry_name=entry_name)
 
 
